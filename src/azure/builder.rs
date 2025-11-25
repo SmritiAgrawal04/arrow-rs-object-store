@@ -25,6 +25,7 @@ use crate::client::{HttpConnector, TokenCredentialProvider, http_connector};
 use crate::config::ConfigValue;
 use crate::{ClientConfigKey, ClientOptions, Result, RetryConfig, StaticCredentialProvider};
 use percent_encoding::percent_decode_str;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use std::sync::Arc;
