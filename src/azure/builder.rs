@@ -25,10 +25,11 @@ use crate::client::{HttpConnector, TokenCredentialProvider, http_connector};
 use crate::config::ConfigValue;
 use crate::{ClientConfigKey, ClientOptions, Result, RetryConfig, StaticCredentialProvider};
 use percent_encoding::percent_decode_str;
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use std::sync::Arc;
+use std::sync::OnceLock;
+use regex::Regex;
 use url::Url;
 
 /// The well-known account used by Azurite and the legacy Azure Storage Emulator.
@@ -1174,6 +1175,14 @@ mod tests {
         assert!(builder.use_fabric_endpoint.get().unwrap());
 
         let mut builder = MicrosoftAzureBuilder::new();
+        builder
+            .parse_url("abfss://file_system@account-api.onelake.fabric.microsoft.com/")
+            .unwrap();
+        assert_eq!(builder.account_name, Some("account".to_string()));
+        assert_eq!(builder.container_name, Some("file_system".to_string()));
+        assert!(builder.use_fabric_endpoint.get().unwrap());
+
+        let mut builder = MicrosoftAzureBuilder::new();
         builder.parse_url("abfs://container/path").unwrap();
         assert_eq!(builder.container_name, Some("container".to_string()));
 
@@ -1222,6 +1231,14 @@ mod tests {
        
         let mut builder = MicrosoftAzureBuilder::new();
         builder
+            .parse_url("https://account-api.onelake.fabric.microsoft.com/")
+            .unwrap();
+        assert_eq!(builder.account_name, Some("account".to_string()));
+        assert_eq!(builder.container_name, None);
+        assert!(builder.use_fabric_endpoint.get().unwrap());
+       
+        let mut builder = MicrosoftAzureBuilder::new();
+        builder
             .parse_url("https://account.dfs.fabric.microsoft.com/container")
             .unwrap();
         assert_eq!(builder.account_name, Some("account".to_string()));
@@ -1246,10 +1263,34 @@ mod tests {
 
         let mut builder = MicrosoftAzureBuilder::new();
         builder
-            .parse_url("https://account.blob.fabric.microsoft.com/container")
+            .parse_url("https://account.blob.fabric.microsoft.com/")
             .unwrap();
         assert_eq!(builder.account_name, Some("account".to_string()));
-        assert_eq!(builder.container_name.as_deref(), Some("container"));
+        assert_eq!(builder.container_name, None);
+        assert!(builder.use_fabric_endpoint.get().unwrap());
+
+        let mut builder = MicrosoftAzureBuilder::new();
+        builder
+            .parse_url("https://ab000000000000000000000000000000.zab.dfs.fabric.microsoft.com/")
+            .unwrap();
+        assert_eq!(builder.account_name, Some("ab000000000000000000000000000000.zab".to_string()));
+        assert_eq!(builder.container_name.as_deref(), Some("ab000000000000000000000000000000"));
+        assert!(builder.use_fabric_endpoint.get().unwrap());
+
+        let mut builder = MicrosoftAzureBuilder::new();
+        builder
+            .parse_url("https://ab000000000000000000000000000000.zab.blob.fabric.microsoft.com/")
+            .unwrap();
+        assert_eq!(builder.account_name, Some("ab000000000000000000000000000000.zab".to_string()));
+        assert_eq!(builder.container_name.as_deref(), Some("ab000000000000000000000000000000"));
+        assert!(builder.use_fabric_endpoint.get().unwrap());
+
+        let mut builder = MicrosoftAzureBuilder::new();
+        builder
+            .parse_url("https://ab000000000000000000000000000000.zab.onelake.fabric.microsoft.com/")
+            .unwrap();
+        assert_eq!(builder.account_name, Some("ab000000000000000000000000000000.zab".to_string()));
+        assert_eq!(builder.container_name.as_deref(), Some("ab000000000000000000000000000000"));
         assert!(builder.use_fabric_endpoint.get().unwrap());
 
         let err_cases = [
