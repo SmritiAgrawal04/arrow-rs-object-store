@@ -1263,10 +1263,10 @@ mod tests {
 
         let mut builder = MicrosoftAzureBuilder::new();
         builder
-            .parse_url("https://account.blob.fabric.microsoft.com/")
+            .parse_url("https://account.blob.fabric.microsoft.com/container")
             .unwrap();
         assert_eq!(builder.account_name, Some("account".to_string()));
-        assert_eq!(builder.container_name, None);
+        assert_eq!(builder.container_name.as_deref(), Some("container"));
         assert!(builder.use_fabric_endpoint.get().unwrap());
 
         let mut builder = MicrosoftAzureBuilder::new();
