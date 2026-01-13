@@ -1263,6 +1263,14 @@ mod tests {
 
         let mut builder = MicrosoftAzureBuilder::new();
         builder
+            .parse_url("https://Ab000000000000000000000000000000.zAb.dfs.fabric.microsoft.com/")
+            .unwrap();
+        assert_eq!(builder.account_name, Some("ab000000000000000000000000000000.zab".to_string()));
+        assert_eq!(builder.container_name.as_deref(), Some("ab000000000000000000000000000000"));
+        assert!(builder.use_fabric_endpoint.get().unwrap());
+
+        let mut builder = MicrosoftAzureBuilder::new();
+        builder
             .parse_url("https://ab000000000000000000000000000000.zab.dfs.fabric.microsoft.com/")
             .unwrap();
         assert_eq!(builder.account_name, Some("ab000000000000000000000000000000.zab".to_string()));
