@@ -28,8 +28,6 @@ use percent_encoding::percent_decode_str;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use std::sync::Arc;
-use std::sync::OnceLock;
-use regex::Regex;
 use url::Url;
 
 /// The well-known account used by Azurite and the legacy Azure Storage Emulator.
@@ -1175,14 +1173,6 @@ mod tests {
         assert!(builder.use_fabric_endpoint.get().unwrap());
 
         let mut builder = MicrosoftAzureBuilder::new();
-        builder
-            .parse_url("abfss://file_system@account-api.onelake.fabric.microsoft.com/")
-            .unwrap();
-        assert_eq!(builder.account_name, Some("account".to_string()));
-        assert_eq!(builder.container_name, Some("file_system".to_string()));
-        assert!(builder.use_fabric_endpoint.get().unwrap());
-
-        let mut builder = MicrosoftAzureBuilder::new();
         builder.parse_url("abfs://container/path").unwrap();
         assert_eq!(builder.container_name, Some("container".to_string()));
 
@@ -1228,6 +1218,7 @@ mod tests {
         assert_eq!(builder.account_name, Some("account".to_string()));
         assert_eq!(builder.container_name, None);
         assert!(builder.use_fabric_endpoint.get().unwrap());
+<<<<<<< HEAD
        
         let mut builder = MicrosoftAzureBuilder::new();
         builder
@@ -1236,6 +1227,8 @@ mod tests {
         assert_eq!(builder.account_name, Some("account".to_string()));
         assert_eq!(builder.container_name, None);
         assert!(builder.use_fabric_endpoint.get().unwrap());
+=======
+>>>>>>> 5d7a1fd (Eliminating the use of regex for ws-pl fqdn matching)
        
         let mut builder = MicrosoftAzureBuilder::new();
         builder
@@ -1274,7 +1267,7 @@ mod tests {
             .parse_url("https://Ab000000000000000000000000000000.zAb.dfs.fabric.microsoft.com/")
             .unwrap();
         assert_eq!(builder.account_name, Some("ab000000000000000000000000000000.zab".to_string()));
-        assert_eq!(builder.container_name.as_deref(), Some("ab000000000000000000000000000000"));
+        assert_eq!(builder.container_name.as_deref(), None);
         assert!(builder.use_fabric_endpoint.get().unwrap());
 
         let mut builder = MicrosoftAzureBuilder::new();
@@ -1282,23 +1275,23 @@ mod tests {
             .parse_url("https://ab000000000000000000000000000000.zab.dfs.fabric.microsoft.com/")
             .unwrap();
         assert_eq!(builder.account_name, Some("ab000000000000000000000000000000.zab".to_string()));
-        assert_eq!(builder.container_name.as_deref(), Some("ab000000000000000000000000000000"));
+        assert_eq!(builder.container_name.as_deref(), None);
         assert!(builder.use_fabric_endpoint.get().unwrap());
 
         let mut builder = MicrosoftAzureBuilder::new();
         builder
-            .parse_url("https://ab000000000000000000000000000000.zab.blob.fabric.microsoft.com/")
+            .parse_url("https://c047b3e34e89407a98d7cf9949ae92a3.zc0.blob.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file")
             .unwrap();
-        assert_eq!(builder.account_name, Some("ab000000000000000000000000000000.zab".to_string()));
-        assert_eq!(builder.container_name.as_deref(), Some("ab000000000000000000000000000000"));
+        assert_eq!(builder.account_name, Some("c047b3e34e89407a98d7cf9949ae92a3.zc0".to_string()));
+        assert_eq!(builder.container_name.as_deref(), Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"));
         assert!(builder.use_fabric_endpoint.get().unwrap());
 
         let mut builder = MicrosoftAzureBuilder::new();
         builder
-            .parse_url("https://ab000000000000000000000000000000.zab.onelake.fabric.microsoft.com/")
+            .parse_url("https://c047b3e34e89407a98d7cf9949ae92a3.zc0.onelake.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file")
             .unwrap();
-        assert_eq!(builder.account_name, Some("ab000000000000000000000000000000.zab".to_string()));
-        assert_eq!(builder.container_name.as_deref(), Some("ab000000000000000000000000000000"));
+        assert_eq!(builder.account_name, Some("c047b3e34e89407a98d7cf9949ae92a3.zc0".to_string()));
+        assert_eq!(builder.container_name.as_deref(), Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"));
         assert!(builder.use_fabric_endpoint.get().unwrap());
 
         let err_cases = [
@@ -1309,9 +1302,12 @@ mod tests {
             "abfss://file_system.bar@account.dfs.core.windows.net/",
             "https://blob.mydomain/",
             "https://blob.foo.dfs.core.windows.net/"
+<<<<<<< HEAD
             "https://ab000000000000000000000000000000.zcd.dfs.fabric.microsoft.com", // xy mismatch (ab != cd)
             "https://ab00000000000000000000000000000.zab.dfs.fabric.microsoft.com",  // workspaceid 31 chars
             "https://ab000000000000000000000000000000.zabc.dfs.fabric.microsoft.com", // xy 3 chars
+=======
+>>>>>>> 5d7a1fd (Eliminating the use of regex for ws-pl fqdn matching)
         ];
         let mut builder = MicrosoftAzureBuilder::new();
         for case in err_cases {
