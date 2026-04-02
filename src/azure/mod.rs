@@ -378,6 +378,39 @@ mod tests {
         }
     }
 
+    #[ignore = "Used for manual testing against a real Workspace Private Link Endpoint."]
+    #[tokio::test]
+    async fn azure_onelake_wspl_test() {
+        maybe_skip_integration!();
+    
+        let url = std::env::var("AZURE_ONELAKE_URL")
+            .expect("Set AZURE_ONELAKE_URL to a WS-PL FQDN");
+    
+        let workspace_id = std::env::var("AZURE_ONELAKE_WORKSPACE_GUID")
+            .expect("Set AZURE_ONELAKE_WORKSPACE_GUID to the OneLake workspace GUID");
+    
+        let artifact_id = std::env::var("AZURE_ONELAKE_ARTIFACT_GUID")
+            .expect("Set AZURE_ONELAKE_ARTIFACT_GUID to the OneLake artifact GUID");
+    
+        let store = MicrosoftAzureBuilder::new()
+            .with_url(&url)
+            .with_bearer_token_authorization(
+                &std::env::var("AZURE_STORAGE_TOKEN").expect("Set AZURE_STORAGE_TOKEN"),
+            )
+            .with_container_name(&workspace_id)
+            .build()
+            .unwrap();
+    
+        let data = Bytes::from("Hello OneLake WSPL");
+        let path = Path::from(format!("{}/Files/integration_test_wspl.txt", artifact_id));
+    
+        store.put(&path, data.clone().into()).await.unwrap();
+        let result = store.get(&path).await.unwrap();
+        let loaded = result.bytes().await.unwrap();
+        assert_eq!(data, loaded);
+        store.delete(&path).await.unwrap();
+    }
+
     #[ignore = "Used for manual testing against a real storage account."]
     #[tokio::test]
     async fn test_user_delegation_key() {
