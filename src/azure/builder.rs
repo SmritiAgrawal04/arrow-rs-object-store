@@ -681,22 +681,22 @@ impl MicrosoftAzureBuilder {
                 }
             }
             "https" => match host.split_once('.') {
-
                 // Workspace-level Private Link detection
                 // "{workspaceid}.z??.(onelake|dfs|blob).fabric.microsoft.com"
-                Some((workspaceid, rest)) if rest.starts_with('z') && rest.ends_with("fabric.microsoft.com") => {
+                Some((workspaceid, rest))
+                    if rest.starts_with('z') && rest.ends_with("fabric.microsoft.com") =>
+                {
                     // rest looks like: "z28.dfs.fabric.microsoft.com" / "z28.blob.fabric.microsoft.com" / etc.
                     // Account name for WS-PL is two labels: "{workspaceid}.z{xy}"
-                    let (zone, _) = rest
-                        .split_once('.')
-                        .unwrap_or((rest, ""));
+                    let (zone, _) = rest.split_once('.').unwrap_or((rest, ""));
 
                     self.account_name = Some(format!("{workspaceid}.{zone}"));
                     self.endpoint = Some(format!("https://{}", host));
 
                     // Attempt to infer the container name from the URL
-                    let container = parsed.path_segments().unwrap().next()
-                        .expect("iterator always contains at least one string (which may be empty)");
+                    let container = parsed.path_segments().unwrap().next().expect(
+                        "iterator always contains at least one string (which may be empty)",
+                    );
 
                     if !container.is_empty() {
                         self.container_name = Some(validate(container)?);
@@ -1218,7 +1218,7 @@ mod tests {
         assert_eq!(builder.account_name, Some("account".to_string()));
         assert_eq!(builder.container_name, None);
         assert!(builder.use_fabric_endpoint.get().unwrap());
-       
+
         let mut builder = MicrosoftAzureBuilder::new();
         builder
             .parse_url("https://account.dfs.fabric.microsoft.com/container")
@@ -1232,7 +1232,10 @@ mod tests {
             .parse_url("https://onelake.dfs.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456.lakehouse/Files/tables/sales/data.parquet")
             .unwrap();
         assert_eq!(builder.account_name, Some("onelake".to_string()));
-        assert_eq!(builder.container_name.as_deref(), Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"));
+        assert_eq!(
+            builder.container_name.as_deref(),
+            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3")
+        );
         assert!(builder.use_fabric_endpoint.get().unwrap());
 
         let mut builder = MicrosoftAzureBuilder::new();
@@ -1258,7 +1261,7 @@ mod tests {
             "abfss://file_system@account.foo.dfs.core.windows.net/",
             "abfss://file_system.bar@account.dfs.core.windows.net/",
             "https://blob.mydomain/",
-            "https://blob.foo.dfs.core.windows.net/"
+            "https://blob.foo.dfs.core.windows.net/",
         ];
         let mut builder = MicrosoftAzureBuilder::new();
         for case in err_cases {
@@ -1266,12 +1269,7 @@ mod tests {
         }
     }
 
-    
-    fn assert_azure_ws_pl_url(
-        url: &str,
-        expected_account: &str,
-        expected_container: Option<&str>,
-    ) {
+    fn assert_azure_ws_pl_url(url: &str, expected_account: &str, expected_container: Option<&str>) {
         let mut builder = MicrosoftAzureBuilder::new();
         builder.parse_url(url).unwrap();
 
@@ -1280,27 +1278,49 @@ mod tests {
         assert!(builder.use_fabric_endpoint.get().unwrap());
     }
 
-
     #[test]
     fn azure_test_workspace_private_link() {
-        assert_azure_ws_pl_url("https://Ab000000000000000000000000000000.zAb.dfs.fabric.microsoft.com/", "ab000000000000000000000000000000.zab", None);
-        
-        assert_azure_ws_pl_url("https://ab000000000000000000000000000000.zab.dfs.fabric.microsoft.com/", "ab000000000000000000000000000000.zab", None);
-        
-        assert_azure_ws_pl_url("https://c047b3e34e89407a98d7cf9949ae92a3.zc0.blob.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file", 
-        "c047b3e34e89407a98d7cf9949ae92a3.zc0", Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"));
+        assert_azure_ws_pl_url(
+            "https://Ab000000000000000000000000000000.zAb.dfs.fabric.microsoft.com/",
+            "ab000000000000000000000000000000.zab",
+            None,
+        );
 
-        assert_azure_ws_pl_url("https://c047b3e34e89407a98d7cf9949ae92a3.zc0.dfs.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
-        "c047b3e34e89407a98d7cf9949ae92a3.zc0", Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"));
+        assert_azure_ws_pl_url(
+            "https://ab000000000000000000000000000000.zab.dfs.fabric.microsoft.com/",
+            "ab000000000000000000000000000000.zab",
+            None,
+        );
 
-        assert_azure_ws_pl_url("https://c047b3e34e89407a98d7cf9949ae92a3.zc0.onelake.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
-        "c047b3e34e89407a98d7cf9949ae92a3.zc0", Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"));
+        assert_azure_ws_pl_url(
+            "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.blob.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+            "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+        );
 
-        assert_azure_ws_pl_url("https://c047b3e34e89407a98d7cf9949ae92a3.zc0.w.api.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
-        "c047b3e34e89407a98d7cf9949ae92a3.zc0", Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"));
+        assert_azure_ws_pl_url(
+            "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.dfs.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+            "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+        );
 
-        assert_azure_ws_pl_url("https://c047b3e34e89407a98d7cf9949ae92a3.zc0.c.api.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
-        "c047b3e34e89407a98d7cf9949ae92a3.zc0", Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"));
+        assert_azure_ws_pl_url(
+            "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.onelake.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+            "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+        );
+
+        assert_azure_ws_pl_url(
+            "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.w.api.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+            "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+        );
+
+        assert_azure_ws_pl_url(
+            "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.c.api.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+            "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+        );
     }
 
     #[test]
