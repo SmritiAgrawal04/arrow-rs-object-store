@@ -395,7 +395,7 @@ mod tests {
         let store = MicrosoftAzureBuilder::new()
             .with_url(&url)
             .with_bearer_token_authorization(
-                &std::env::var("AZURE_STORAGE_TOKEN").expect("Set AZURE_STORAGE_TOKEN")
+                std::env::var("AZURE_STORAGE_TOKEN").expect("Set AZURE_STORAGE_TOKEN"),
             )
             .with_container_name(&workspace_id)
             .build()
