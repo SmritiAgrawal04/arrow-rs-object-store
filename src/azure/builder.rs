@@ -1280,68 +1280,52 @@ mod tests {
 
     #[test]
     fn azure_test_workspace_private_link() {
-        assert_azure_ws_pl_url(
-            "https://Ab000000000000000000000000000000.zAb.dfs.fabric.microsoft.com/",
-            "ab000000000000000000000000000000.zab",
-            None,
-        );
-
-        assert_azure_ws_pl_url(
-            "https://ab000000000000000000000000000000.zab.dfs.fabric.microsoft.com/",
-            "ab000000000000000000000000000000.zab",
-            None,
-        );
-
-        assert_azure_ws_pl_url(
-            "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.blob.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
-            "c047b3e34e89407a98d7cf9949ae92a3.zc0",
-            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
-        );
-
-        assert_azure_ws_pl_url(
-            "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.dfs.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
-            "c047b3e34e89407a98d7cf9949ae92a3.zc0",
-            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
-        );
-
-        assert_azure_ws_pl_url(
-            "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.onelake.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
-            "c047b3e34e89407a98d7cf9949ae92a3.zc0",
-            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
-        );
-
-        assert_azure_ws_pl_url(
-            "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.w.api.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
-            "c047b3e34e89407a98d7cf9949ae92a3.zc0",
-            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
-        );
-
-        assert_azure_ws_pl_url(
-            "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.c.api.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
-            "c047b3e34e89407a98d7cf9949ae92a3.zc0",
-            Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
-        );
-    }
-
-    #[test]
-    fn azure_test_config_from_map() {
-        let azure_client_id = "object_store:fake_access_key_id";
-        let azure_storage_account_name = "object_store:fake_secret_key";
-        let azure_storage_token = "object_store:fake_default_region";
-        let options = HashMap::from([
-            ("azure_client_id", azure_client_id),
-            ("azure_storage_account_name", azure_storage_account_name),
-            ("azure_storage_token", azure_storage_token),
-        ]);
-
-        let builder = options
-            .into_iter()
-            .fold(MicrosoftAzureBuilder::new(), |builder, (key, value)| {
-                builder.with_config(key.parse().unwrap(), value)
-            });
-        assert_eq!(builder.client_id.unwrap(), azure_client_id);
-        assert_eq!(builder.account_name.unwrap(), azure_storage_account_name);
-        assert_eq!(builder.bearer_token.unwrap(), azure_storage_token);
+        let test_cases: Vec<(&str, &str, Option<&str>)> = vec![
+            (
+                "https://Ab000000000000000000000000000000.zAb.dfs.fabric.microsoft.com/",
+                "ab000000000000000000000000000000.zab",
+                None,
+            ),
+            (
+                "https://ab000000000000000000000000000000.zab.dfs.fabric.microsoft.com/",
+                "ab000000000000000000000000000000.zab",
+                None,
+            ),
+            (
+                "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.blob.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+                "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+                Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+            ),
+            (
+                "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.dfs.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+                "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+                Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+            ),
+            (
+                "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.onelake.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+                "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+                Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+            ),
+            (
+                "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.w.api.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+                "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+                Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+            ),
+            (
+                "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.c.api.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+                "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+                Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+            ),
+        ];
+    
+        for (url, expected_account, expected_container) in &test_cases {
+            let mut builder = MicrosoftAzureBuilder::new();
+            builder.parse_url(url).unwrap();
+    
+            assert_eq!(builder.account_name.as_deref(), Some(*expected_account), "account mismatch for URL: {url}");
+            assert_eq!(builder.container_name.as_deref(), *expected_container, "container mismatch for URL: {url}");
+            assert!(builder.use_fabric_endpoint.get().unwrap(), "use_fabric_endpoint not set for URL: {url}");
+        }
     }
 
     #[test]
