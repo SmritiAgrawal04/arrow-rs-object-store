@@ -383,8 +383,8 @@ mod tests {
     async fn azure_onelake_wspl_test() {
         maybe_skip_integration!();
 
-        let url = std::env::var("AZURE_ONELAKE_URL")
-            .expect("Set AZURE_ONELAKE_URL to a WS-PL FQDN");
+        let url =
+            std::env::var("AZURE_ONELAKE_URL").expect("Set AZURE_ONELAKE_URL to a WS-PL FQDN");
         let parsed = url::Url::parse(&url).unwrap();
         let segments: Vec<&str> = parsed.path_segments().unwrap().collect();
         let path = Path::from(segments[1..].join("/"));
@@ -392,7 +392,7 @@ mod tests {
         let store = MicrosoftAzureBuilder::new()
             .with_url(&url)
             .with_bearer_token_authorization(
-                &std::env::var("AZURE_STORAGE_TOKEN").expect("Set AZURE_STORAGE_TOKEN"),
+                std::env::var("AZURE_STORAGE_TOKEN").expect("Set AZURE_STORAGE_TOKEN"),
             )
             .build()
             .unwrap();

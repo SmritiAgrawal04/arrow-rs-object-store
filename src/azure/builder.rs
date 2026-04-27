@@ -1120,7 +1120,6 @@ fn split_sas(sas: &str) -> Result<Vec<(String, String)>, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
 
     #[test]
     fn azure_blob_test_urls() {
@@ -1269,15 +1268,6 @@ mod tests {
         }
     }
 
-    fn assert_azure_ws_pl_url(url: &str, expected_account: &str, expected_container: Option<&str>) {
-        let mut builder = MicrosoftAzureBuilder::new();
-        builder.parse_url(url).unwrap();
-
-        assert_eq!(builder.account_name.as_deref(), Some(expected_account));
-        assert_eq!(builder.container_name.as_deref(), expected_container);
-        assert!(builder.use_fabric_endpoint.get().unwrap());
-    }
-
     #[test]
     fn azure_test_workspace_private_link() {
         let test_cases: Vec<(&str, &str, Option<&str>)> = vec![
@@ -1317,14 +1307,25 @@ mod tests {
                 Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
             ),
         ];
-    
+
         for (url, expected_account, expected_container) in &test_cases {
             let mut builder = MicrosoftAzureBuilder::new();
             builder.parse_url(url).unwrap();
-    
-            assert_eq!(builder.account_name.as_deref(), Some(*expected_account), "account mismatch for URL: {url}");
-            assert_eq!(builder.container_name.as_deref(), *expected_container, "container mismatch for URL: {url}");
-            assert!(builder.use_fabric_endpoint.get().unwrap(), "use_fabric_endpoint not set for URL: {url}");
+
+            assert_eq!(
+                builder.account_name.as_deref(),
+                Some(*expected_account),
+                "account mismatch for URL: {url}"
+            );
+            assert_eq!(
+                builder.container_name.as_deref(),
+                *expected_container,
+                "container mismatch for URL: {url}"
+            );
+            assert!(
+                builder.use_fabric_endpoint.get().unwrap(),
+                "use_fabric_endpoint not set for URL: {url}"
+            );
         }
     }
 
