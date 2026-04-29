@@ -666,10 +666,23 @@ impl MicrosoftAzureBuilder {
                     self.container_name = Some(validate(host)?);
                 } else {
                     match host.split_once('.') {
+                        Some((workspaceid, rest))
+                            if rest.starts_with('z') && rest.ends_with("fabric.microsoft.com") =>
+                        {
+                            let (zone, _) = rest.split_once('.').unwrap_or((rest, ""));
+
+                            self.account_name = Some(format!("{workspaceid}.{zone}"));
+                            self.endpoint = Some(format!("https://{}", host));
+
+                            self.container_name = Some(validate(parsed.username())?);
+                            self.use_fabric_endpoint = true.into();
+                        }
+
                         Some((a, "dfs.core.windows.net")) | Some((a, "blob.core.windows.net")) => {
                             self.account_name = Some(validate(a)?);
                             self.container_name = Some(validate(parsed.username())?);
                         }
+
                         Some((a, "dfs.fabric.microsoft.com"))
                         | Some((a, "blob.fabric.microsoft.com")) => {
                             self.account_name = Some(validate(a)?);
@@ -1305,6 +1318,16 @@ mod tests {
                 "https://c047b3e34e89407a98d7cf9949ae92a3.zc0.c.api.fabric.microsoft.com/c047b3e3-4e89-407a-98d7-cf9949ae92a3/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
                 "c047b3e34e89407a98d7cf9949ae92a3.zc0",
                 Some("c047b3e3-4e89-407a-98d7-cf9949ae92a3"),
+            ),
+            (
+                "abfss://c047b3e34e89407a98d7cf9949ae92a3@c047b3e34e89407a98d7cf9949ae92a3.zc0.dfs.fabric.microsoft.com/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+                "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+                Some("c047b3e34e89407a98d7cf9949ae92a3"),
+            ),
+            (
+                "abfss://c047b3e34e89407a98d7cf9949ae92a3@c047b3e34e89407a98d7cf9949ae92a3.zc0.blob.fabric.microsoft.com/9f1a2b3c-4d5e-6f70-8a9b-c0d1e2f3a456/file",
+                "c047b3e34e89407a98d7cf9949ae92a3.zc0",
+                Some("c047b3e34e89407a98d7cf9949ae92a3"),
             ),
         ];
 

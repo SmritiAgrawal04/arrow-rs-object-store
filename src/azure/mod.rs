@@ -386,8 +386,21 @@ mod tests {
         let url =
             std::env::var("AZURE_ONELAKE_URL").expect("Set AZURE_ONELAKE_URL to a WS-PL FQDN");
         let parsed = url::Url::parse(&url).unwrap();
-        let segments: Vec<&str> = parsed.path_segments().unwrap().collect();
-        let path = Path::from(segments[1..].join("/"));
+
+        let path = match parsed.scheme() {
+            "abfss" | "abfs" => {
+                // abfss://<container>@<host>/<path...>
+                // container is in username, entire path is the object path
+                let segments: Vec<&str> = parsed.path_segments().unwrap().collect();
+                Path::from(segments.join("/"))
+            }
+            _ => {
+                // https://<host>/<container>/<path...>
+                // first segment is container, rest is the object path
+                let segments: Vec<&str> = parsed.path_segments().unwrap().collect();
+                Path::from(segments[1..].join("/"))
+            }
+        };
 
         let store = MicrosoftAzureBuilder::new()
             .with_url(&url)
