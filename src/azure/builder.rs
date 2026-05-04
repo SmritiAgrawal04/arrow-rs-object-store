@@ -666,9 +666,12 @@ impl MicrosoftAzureBuilder {
                     self.container_name = Some(validate(host)?);
                 } else {
                     match host.split_once('.') {
+                        // Workspace-level Private Link detection
+                        // "{workspaceid}.z??.(onelake|dfs|blob).fabric.microsoft.com"
                         Some((workspaceid, rest))
                             if rest.starts_with('z') && rest.ends_with("fabric.microsoft.com") =>
                         {
+                            // Account name for WS-PL is two labels: "{workspaceid}.z{xy}"
                             let (zone, _) = rest.split_once('.').unwrap_or((rest, ""));
 
                             self.account_name = Some(format!("{workspaceid}.{zone}"));
@@ -1350,6 +1353,27 @@ mod tests {
                 "use_fabric_endpoint not set for URL: {url}"
             );
         }
+    }
+
+    #[test]
+    fn azure_test_config_from_map() {
+        let azure_client_id = "object_store:fake_access_key_id";
+        let azure_storage_account_name = "object_store:fake_secret_key";
+        let azure_storage_token = "object_store:fake_default_region";
+        let options = HashMap::from([
+            ("azure_client_id", azure_client_id),
+            ("azure_storage_account_name", azure_storage_account_name),
+            ("azure_storage_token", azure_storage_token),
+        ]);
+
+        let builder = options
+            .into_iter()
+            .fold(MicrosoftAzureBuilder::new(), |builder, (key, value)| {
+                builder.with_config(key.parse().unwrap(), value)
+            });
+        assert_eq!(builder.client_id.unwrap(), azure_client_id);
+        assert_eq!(builder.account_name.unwrap(), azure_storage_account_name);
+        assert_eq!(builder.bearer_token.unwrap(), azure_storage_token);
     }
 
     #[test]
